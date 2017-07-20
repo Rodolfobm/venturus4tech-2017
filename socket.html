@@ -54,32 +54,36 @@
 </head>
 
 <body>
-    <ul id="messages"></ul>
-    <form action="">
-        <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
+<ul id="messages"></ul>
+<form action="">
+    <input id="m" autocomplete="off" /><button>Send</button>
+</form>
 
-    <script>
+<script>
 
-        var server = io('http://localhost:3000');
+    var server = io('http://localhost:3000');
+    var nickname = '';
 
-        server.on('connect', function(data){
-            var nickname = prompt("What is your name?");
+    server.on('connect', function(data){
+        nickname = prompt("What is your name?");
+    })
 
-            server.emit('join', nickname);
-        })
+    $('form').submit(function () {
+        var message = $('#m').val();
+        server.emit('messages', {"author": nickname,"message": message});
+        $('#m').val('');
+        return false;
+    });
 
-         $('form').submit(function () {
-            var message = $('#m').val();
-            server.emit('messages', message);
-            $('#m').val('');
-            return false;
-        });
+    server.on('messages', function (data) {
+        console.log(data);
+        $('#messages').append($('<li>').text(data.author + ': ' + data.message));
+    });
 
-        server.on('messages', function (data) {
-            $('#messages').append($('<li>').text(data));
-        });
-        </script>
+    server.on('joined', function(data){
+        $('#messages').append($('<li>').text(data));
+    })
+</script>
 </body>
 
 </html>

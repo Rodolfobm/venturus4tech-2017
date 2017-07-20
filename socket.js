@@ -11,8 +11,8 @@ function handler(request, response) {
 
 var messages = [];
 
-var saveMessage = function(userName,userMessage){
-    messages.push({author:userName,message:userMessage});
+var saveMessage = function(userMessage){
+    messages.push(userMessage);
     if(messages.length > 10){
         messages.shift();
     }
@@ -24,12 +24,15 @@ io.on('connection', function (client) {
     client.on('join', function(name){
         client.name = name;
         messages.forEach(function(message) {
-            client.emit("messages", message.author + ": " + message.message)   
+            client.emit("messages", message)
         });
     });
     
     client.on('messages', function (message) {
-        io.emit("messages", client.name + ": " + message);
-        saveMessage(client.name,message);
+        var userMessage = {};
+        userMessage.author = client.name;
+        userMessage.message = message;
+        io.emit("messages", userMessage);
+        saveMessage(userMessage);
     });
 });

@@ -25,37 +25,34 @@ var messageSchema = new Schema({
 var MessageModel = mongoose.model('messages', messageSchema);
 
 // Save the message
-var saveMessage = function(userName,userMessage){
+var saveMessage = function(userMessage){
     var newMessage = new MessageModel();
-    newMessage.message = userMessage;
-    newMessage.author = userName;
+    newMessage.author = userMessage.author;
+    newMessage.message = userMessage.message;
     
     newMessage.save(function(error){
         if(error){
             console.log(error);
+        } else {
+            io.emit("messages", newMessage);
         }
     })
-}
+};
 
 io.on('connection', function (client) {
     console.log('Client connected');
 
-    client.on('join', function(name){
-        client.name = name;
-
-        MessageModel.find({}, function(error, messages){
+    MessageModel.find({}, function(error, messages){
             if(error){
                 console.log(error);
             } else {
                 messages.forEach(function(message) {
-                    client.emit("messages", message.author + ": " + message.message)   
+                    client.emit("messages", message);
                 });
             }
-        }); 
-    });
+        });
     
     client.on('messages', function (message) {
-        io.emit("messages", client.name + ": " + message);
-        saveMessage(client.name,message);
+        saveMessage(message);
     });
 });
