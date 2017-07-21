@@ -3,36 +3,32 @@ var io = require('socket.io')(server);
 
 server.listen(3000);
 
-function handler(request, response) {
-    console.log("Recebemos um request");
-    response.write('Hello World');
+io.set("origins", "*:*");
+
+function handler(request,response){
+    response.write('Hello');
     response.end();
-};
+}
 
 var messages = [];
 
-var saveMessage = function(userMessage){
-    messages.push(userMessage);
-    if(messages.length > 10){
-        messages.shift();
-    }
-}
+var saveMessage = function(message){
+    messages.push(message);
+};
 
-io.on('connection', function (client) {
-    console.log('Client connected');
-
-    client.on('join', function(name){
-        client.name = name;
-        messages.forEach(function(message) {
-            client.emit("messages", message)
-        });
-    });
+io.on('connection', function(client){
+    console.log('cliente connected');
     
-    client.on('messages', function (message) {
-        var userMessage = {};
-        userMessage.author = client.name;
-        userMessage.message = message;
-        io.emit("messages", userMessage);
-        saveMessage(userMessage);
-    });
-});
+    client.on('join', function(){
+        messages.forEach(function(message){
+            client.emit('messages',message);
+        });
+    })
+    
+
+    client.on('messages', function(message){
+        message.time = new Date().toISOString();
+        saveMessage(message);
+        io.emit('messages',message);
+    })
+})

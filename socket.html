@@ -66,6 +66,7 @@
 
     server.on('connect', function(data){
         nickname = prompt("What is your name?");
+        server.emit('join');
     })
 
     $('form').submit(function () {
